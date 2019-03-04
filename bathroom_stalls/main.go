@@ -1,40 +1,25 @@
 package main
 
 import (
-	"container/heap"
 	"fmt"
 )
 
-type Partition struct {
-	size  int
-	count int
-}
-
-type PartitionHeap []Partition
-
-func (h PartitionHeap) Len() int           { return len(h) }
-func (h PartitionHeap) Less(i, j int) bool { return h[i].size < h[j].size }
-func (h PartitionHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-
-func (h *PartitionHeap) Push(x interface{}) {
-	*h = append(*h, x.(Partition))
-}
-
-func (h *PartitionHeap) Pop() interface{} {
-	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[0 : n-1]
-	return x
-}
-
 func solve(N, K int) (int, int) {
-	h := &PartitionHeap{{N, 1}}
-	heap.Init(h)
+	counts := map[int]int{
+		N: 1,
+	}
 	for {
-		p := h.Pop().(Partition)
-		K -= p.count
-		newSize := p.size - 1
+		fmt.Println(counts)
+		size, count := 0, 0
+		for s, c := range counts {
+			if (c > 0) && (s > size) {
+				size = s
+				count = c
+			}
+		}
+		K -= count
+		counts[size] = 0
+		newSize := size - 1
 		left := newSize / 2
 		var right int
 		if newSize > 1 {
@@ -49,24 +34,13 @@ func solve(N, K int) (int, int) {
 		if K <= 0 {
 			return left, right
 		} else {
-			leftFound, rightFound := false, false
-			for _, pPrime := range *h {
-				if (left > 0) && (pPrime.size == left) {
-					pPrime.count += p.count
-					leftFound = true
-				}
-				if (right > 0) && (pPrime.size == right) {
-					pPrime.count += p.count
-					rightFound = true
-				}
+			if left > 0 {
+				c := counts[left]
+				counts[left] = c + count
 			}
-			if (left > 0) && (leftFound == false) {
-				newP := Partition{left, p.count}
-				h.Push(newP)
-			}
-			if (right > 0) && (rightFound == false) {
-				newP := Partition{right, p.count}
-				h.Push(newP)
+			if right > 0 {
+				c := counts[right]
+				counts[right] = c + count
 			}
 		}
 	}
